@@ -124,10 +124,11 @@ public abstract class Graph {
 		ArrayList<Integer> degSeq = new ArrayList<>();
 
 		for (int i = 0; i < numVertices; i++) {
-			int deg = getNeighbors(i).size();
+			int deg = getNeighbors(i).size() + getInNeighbors(i).size();
 
 			degSeq.add(deg);
 		}
+		degSeq.sort(Collections.reverseOrder());
 		return degSeq;
 
 	}
