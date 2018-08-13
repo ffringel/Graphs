@@ -176,6 +176,16 @@ public class Maze {
 
 		HashMap<MazeNode, MazeNode> parentMap = new HashMap<MazeNode, MazeNode>();
 		
+		boolean found = dfsSearch(start, goal, parentMap);
+		if (!found) {
+			System.out.println("No path exists");
+			return new LinkedList<MazeNode>();
+		}
+
+		return constructPath(start, goal, parentMap);
+	}
+
+	private boolean dfsSearch(MazeNode start, MazeNode goal, HashMap<MazeNode, MazeNode> parentMap) {
 		HashSet<MazeNode> visited = new HashSet<MazeNode>();
 		Stack<MazeNode> toExplore = new Stack<MazeNode>();
 		toExplore.push(start);
@@ -199,12 +209,12 @@ public class Maze {
 				}
 			}
 		}
-		
-		if (!found) {
-			System.out.println("No path exists");
-			return new LinkedList<MazeNode>();
-		}
 
+		return found;
+	}
+
+	private List<MazeNode> constructPath(MazeNode start, MazeNode goal,
+									  HashMap<MazeNode, MazeNode> parentMap) {
 		// reconstruct the path
 		LinkedList<MazeNode> path = new LinkedList<MazeNode>();
 		MazeNode curr = goal;
@@ -213,33 +223,14 @@ public class Maze {
 			curr = parentMap.get(curr);
 		}
 		path.addFirst(start);
+
 		return path;
 	}
-	
-	
-	/** breadth first search from (startRow,startCol) to (endRow,endCol)
-	 * 
-	 * Note: This method could also stand to be refactored.
-	 * 
-	 * @param startRow  The row of the starting position
-	 * @param startCol  The column of the starting position
-	 * @param endRow The row of the end position
-	 * @param endCol The column of the end position
-	 * @return the path from starting position to ending position, or
-	 * an empty list if there is no path.
-	 */
-	public List<MazeNode> bfs(int startRow, int startCol, int endRow, int endCol) {
-		MazeNode start = cells[startRow][startCol];
-		MazeNode goal = cells[endRow][endCol];
 
-		if (start == null || goal == null) {
-			System.out.println("Start or goal node is null!  No path exists.");
-			return new LinkedList<MazeNode>();
-		}
-
+	private boolean bfsSearch(MazeNode start, MazeNode goal, HashMap<MazeNode, MazeNode> parentMap) {
 		HashSet<MazeNode> visited = new HashSet<MazeNode>();
 		Queue<MazeNode> toExplore = new LinkedList<MazeNode>();
-		HashMap<MazeNode, MazeNode> parentMap = new HashMap<MazeNode, MazeNode>();
+
 		toExplore.add(start);
 		boolean found = false;
 		while (!toExplore.isEmpty()) {
@@ -260,24 +251,21 @@ public class Maze {
 			}
 		}
 
-		if (!found) {
-			System.out.println("No path exists");
-			return new ArrayList<MazeNode>();
-		}
-		// reconstruct the path
-		LinkedList<MazeNode> path = new LinkedList<MazeNode>();
-		MazeNode curr = goal;
-		while (curr != start) {
-			path.addFirst(curr);
-			curr = parentMap.get(curr);
-		}
-		path.addFirst(start);
-		return path;
+		return found;
 	}
-
-/*	public List<MazeNode> dfsRefactored(int startRow, int startCol, 
-										int endRow, int endCol) {
-		// Initialize
+	
+	/** breadth first search from (startRow,startCol) to (endRow,endCol)
+	 * 
+	 * Note: This method could also stand to be refactored.
+	 * 
+	 * @param startRow  The row of the starting position
+	 * @param startCol  The column of the starting position
+	 * @param endRow The row of the end position
+	 * @param endCol The column of the end position
+	 * @return the path from starting position to ending position, or
+	 * an empty list if there is no path.
+	 */
+	public List<MazeNode> bfs(int startRow, int startCol, int endRow, int endCol) {
 		MazeNode start = cells[startRow][startCol];
 		MazeNode goal = cells[endRow][endCol];
 
@@ -285,59 +273,17 @@ public class Maze {
 			System.out.println("Start or goal node is null!  No path exists.");
 			return new LinkedList<MazeNode>();
 		}
-
 		HashMap<MazeNode, MazeNode> parentMap = new HashMap<MazeNode, MazeNode>();
-		boolean found = dfsSearch(start, goal, parentMap);
 
+		boolean found = bfsSearch(start, goal, parentMap);
 		if (!found) {
 			System.out.println("No path exists");
-			return new LinkedList<MazeNode>();
+			return new ArrayList<MazeNode>();
 		}
-
 		// reconstruct the path
 		return constructPath(start, goal, parentMap);
-
 	}
 
-	private static boolean dfsSearch(MazeNode start, MazeNode goal, 
-									HashMap<MazeNode, MazeNode> parentMap) {
-		HashSet<MazeNode> visited = new HashSet<MazeNode>();
-		Stack<MazeNode> toExplore = new Stack<MazeNode>();
-		toExplore.push(start);
-		boolean found = false;
-
-		while (!toExplore.empty()) {
-			MazeNode curr = toExplore.pop();
-			if (curr == goal) {
-				found = true;
-				break;
-			}
-			List<MazeNode> neighbors = curr.getNeighbors();
-			ListIterator<MazeNode> it = neighbors.listIterator(neighbors.size());
-			while (it.hasPrevious()) {
-				MazeNode next = it.previous();
-				if (!visited.contains(next)) {
-					visited.add(next);
-					parentMap.put(next, curr);
-					toExplore.push(next);
-				}
-			}
-		}
-		return found;
-	}
-
-	private static List<MazeNode> constructPath(MazeNode start, MazeNode goal, HashMap<MazeNode, MazeNode> parentMap) {
-		LinkedList<MazeNode> path = new LinkedList<MazeNode>();
-		MazeNode curr = goal;
-		while (curr != start) {
-			path.addFirst(curr);
-			curr = parentMap.get(curr);
-		}
-		path.addFirst(start);
-		return path;
-	}
-
-*/
 	public static void main(String[] args) {
 		String mazeFile = "data/mazes/maze1.maze";
 		Maze maze = new Maze();
