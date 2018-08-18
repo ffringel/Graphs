@@ -8,8 +8,7 @@
 package roadgraph;
 
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import geography.GeographicPoint;
@@ -23,45 +22,41 @@ import util.GraphLoader;
  *
  */
 public class MapGraph {
-	//TODO: Add your member variables here in WEEK 3
-	
+	HashMap<GeographicPoint, MapNode> vertices;
+	int edgeCount = 0;
 	
 	/** 
 	 * Create a new empty MapGraph 
 	 */
-	public MapGraph()
-	{
-		// TODO: Implement in this constructor in WEEK 3
+	public MapGraph() {
+		vertices = new HashMap<>();
 	}
 	
 	/**
 	 * Get the number of vertices (road intersections) in the graph
 	 * @return The number of vertices in the graph.
 	 */
-	public int getNumVertices()
-	{
-		//TODO: Implement this method in WEEK 3
-		return 0;
+	public int getNumVertices() {
+
+		return vertices.keySet().size();
 	}
 	
 	/**
 	 * Return the intersections, which are the vertices in this graph.
 	 * @return The vertices in this graph as GeographicPoints
 	 */
-	public Set<GeographicPoint> getVertices()
-	{
-		//TODO: Implement this method in WEEK 3
-		return null;
+	public Set<GeographicPoint> getVertices() {
+
+		return new HashSet<>(vertices.keySet());
 	}
 	
 	/**
 	 * Get the number of road segments in the graph
 	 * @return The number of edges in the graph.
 	 */
-	public int getNumEdges()
-	{
-		//TODO: Implement this method in WEEK 3
-		return 0;
+	public int getNumEdges() {
+
+		return edgeCount;
 	}
 
 	
@@ -73,10 +68,16 @@ public class MapGraph {
 	 * @return true if a node was added, false if it was not (the node
 	 * was already in the graph, or the parameter is null).
 	 */
-	public boolean addVertex(GeographicPoint location)
-	{
-		// TODO: Implement this method in WEEK 3
-		return false;
+	public boolean addVertex(GeographicPoint location) {
+
+		MapNode mapNode = new MapNode(location);
+		if (location == null || vertices.containsKey(location)) {
+			return false;
+		} else {
+			vertices.put(location, mapNode);
+
+			return true;
+		}
 	}
 	
 	/**
@@ -93,9 +94,14 @@ public class MapGraph {
 	 */
 	public void addEdge(GeographicPoint from, GeographicPoint to, String roadName,
 			String roadType, double length) throws IllegalArgumentException {
+		if (!vertices.containsKey(from) || !vertices.containsKey(to) || roadName == null
+				|| roadType == null || length == 0) {
+			throw new IllegalArgumentException("Cannot add an edge.");
+		}
 
-		//TODO: Implement this method in WEEK 3
-		
+		MapEdge mapEdge = new MapEdge(from, to, roadName, roadType, length);
+		vertices.get(from).addEdge(mapEdge);
+		edgeCount++;
 	}
 	
 
@@ -121,10 +127,32 @@ public class MapGraph {
 	 *   path from start to goal (including both start and goal).
 	 */
 	public List<GeographicPoint> bfs(GeographicPoint start, 
-			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
-	{
+			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched) {
 		// TODO: Implement this method in WEEK 3
-		
+		Queue<GeographicPoint> queue = new LinkedList<>();
+		Set<GeographicPoint> visited = new HashSet<>();
+		HashMap<GeographicPoint, MapNode> parentMap = new HashMap<>();
+
+		//parentMap.put(start, null);
+		queue.add(start);
+		visited.add(start);
+		while (!queue.isEmpty()) {
+			GeographicPoint current = queue.remove();
+			nodeSearched.accept(current);
+
+			if (current == goal) {
+				return new LinkedList<>(parentMap.keySet());
+			}
+
+			for (MapEdge neighbor : vertices.get(current).getEdges()) {
+				if (!visited.contains(neighbor)) {
+					visited.add(neighbor.start);
+
+				}
+			}
+		}
+
+
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
 
@@ -262,5 +290,63 @@ public class MapGraph {
 		*/
 		
 	}
-	
+
+	private class MapNode {
+		GeographicPoint location;
+		List<MapEdge> edges;
+
+		MapNode(GeographicPoint location) {
+			this.location = location;
+			edges = new LinkedList<>();
+		}
+
+		public GeographicPoint getLocation() {
+			return location;
+		}
+
+		public void addEdge(MapEdge edge) {
+			edges.add(edge);
+		}
+
+		public List<MapEdge> getEdges() {
+			return edges;
+		}
+	}
+
+	private class MapEdge {
+		GeographicPoint start;
+		GeographicPoint end;
+		String roadName;
+		String roadType;
+		double edgeLength;
+
+		public MapEdge(GeographicPoint start, GeographicPoint end,
+						String roadName, String roadType, double edgeLength) {
+			this.start = start;
+			this.end = end;
+			this.roadName = roadName;
+			this.roadType = roadType;
+			this.edgeLength = edgeLength;
+		}
+
+		public GeographicPoint getStart() {
+			return start;
+		}
+
+		public GeographicPoint getEnd() {
+			return end;
+		}
+
+		public String getRoadName() {
+			return roadName;
+		}
+
+		public String getRoadType() {
+			return roadType;
+		}
+
+		public double getEdgeLength() {
+			return edgeLength;
+		}
+	}
 }
