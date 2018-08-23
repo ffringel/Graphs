@@ -101,6 +101,7 @@ public class MapGraph {
 
 		MapEdge mapEdge = new MapEdge(from, to, roadName, roadType, length);
 		vertices.get(from).addEdge(mapEdge);
+		vertices.get(from).addNeighbors(vertices.get(to));
 		edgeCount++;
 	}
 	
@@ -128,37 +129,39 @@ public class MapGraph {
 	 */
 	public List<GeographicPoint> bfs(GeographicPoint start, 
 			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched) {
-		// TODO: Implement this method in WEEK 3
-		Queue<GeographicPoint> queue = new LinkedList<>();
-		Set<GeographicPoint> visited = new HashSet<>();
-		HashMap<GeographicPoint, MapNode> parentMap = new HashMap<>();
+		MapNode startNode = vertices.get(start);
+		MapNode goalNode = vertices.get(goal);
 
-		//parentMap.put(start, null);
-		queue.add(start);
-		visited.add(start);
+		Queue<MapNode> queue = new LinkedList<>();
+		HashSet<MapNode> visited = new HashSet<>();
+		HashMap<MapNode, MapNode> parentMap = new HashMap<>();
+
+		queue.add(startNode);
+		visited.add(startNode);
+
 		while (!queue.isEmpty()) {
-			GeographicPoint current = queue.remove();
-			nodeSearched.accept(current);
+			MapNode current = queue.poll();
+			nodeSearched.accept(current.getLocation());
 
-			if (current == goal) {
-				return new LinkedList<>(parentMap.keySet());
-			}
-
-			for (MapEdge neighbor : vertices.get(current).getEdges()) {
+			List<MapNode> neighbors = current.getNeighbors();
+			for (MapNode neighbor : neighbors) {
 				if (!visited.contains(neighbor)) {
-					visited.add(neighbor.start);
-
+					visited.add(neighbor);
+					parentMap.put(neighbor, current);
+					queue.add(neighbor);
 				}
 			}
 		}
 
+		LinkedList<GeographicPoint> path = new LinkedList<>();
+		MapNode node = goalNode;
+		while (node != null) {
+			path.addFirst(node.getLocation());
+			node = parentMap.get(node);
+		}
 
-		// Hook for visualization.  See writeup.
-		//nodeSearched.accept(next.getLocation());
-
-		return null;
+		return path;
 	}
-	
 
 	/** Find the path from start to goal using Dijkstra's algorithm
 	 * 
@@ -293,11 +296,13 @@ public class MapGraph {
 
 	private class MapNode {
 		GeographicPoint location;
-		List<MapEdge> edges;
+		Set<MapEdge> edges;
+		List<MapNode> neighbors;
 
 		MapNode(GeographicPoint location) {
 			this.location = location;
-			edges = new LinkedList<>();
+			edges = new HashSet<>();
+			neighbors = new LinkedList<>();
 		}
 
 		public GeographicPoint getLocation() {
@@ -308,9 +313,18 @@ public class MapGraph {
 			edges.add(edge);
 		}
 
-		public List<MapEdge> getEdges() {
+		public Set<MapEdge> getEdges() {
 			return edges;
 		}
+
+		public void addNeighbors(MapNode node) {
+			neighbors.add(node);
+		}
+
+		public List<MapNode> getNeighbors() {
+			return neighbors;
+		}
+
 	}
 
 	private class MapEdge {
