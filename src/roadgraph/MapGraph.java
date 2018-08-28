@@ -132,6 +132,16 @@ public class MapGraph {
 		MapNode startNode = vertices.get(start);
 		MapNode goalNode = vertices.get(goal);
 
+		if (startNode == null) {
+			System.err.println("Start node " + start + "does not exist");
+			return null;
+		}
+
+		if (goalNode == null) {
+			System.err.println("Goal node " + goal + " does not exist");
+			return null;
+		}
+
 		Queue<MapNode> queue = new LinkedList<>();
 		HashSet<MapNode> visited = new HashSet<>();
 		HashMap<MapNode, MapNode> parentMap = new HashMap<>();
@@ -143,8 +153,10 @@ public class MapGraph {
 			MapNode current = queue.poll();
 			nodeSearched.accept(current.getLocation());
 
-			List<MapNode> neighbors = current.getNeighbors();
-			for (MapNode neighbor : neighbors) {
+			if (current.equals(goalNode))
+				break;
+			
+			for (MapNode neighbor : current.getNeighbors()) {
 				if (!visited.contains(neighbor)) {
 					visited.add(neighbor);
 					parentMap.put(neighbor, current);
@@ -323,6 +335,16 @@ public class MapGraph {
 
 		public List<MapNode> getNeighbors() {
 			return neighbors;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof MapNode) || (o == null)) {
+				return false;
+			}
+
+			MapNode node = (MapNode)o;
+			return node.location.equals(this.location);
 		}
 
 	}
