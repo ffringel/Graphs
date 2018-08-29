@@ -23,6 +23,7 @@ import util.GraphLoader;
  */
 public class MapGraph {
 	HashMap<GeographicPoint, MapNode> vertices;
+	MapEdge mapEdge;
 	int edgeCount = 0;
 	
 	/** 
@@ -99,7 +100,7 @@ public class MapGraph {
 			throw new IllegalArgumentException("Cannot add an edge.");
 		}
 
-		MapEdge mapEdge = new MapEdge(from, to, roadName, roadType, length);
+		mapEdge = new MapEdge(from, to, roadName, roadType, length);
 		vertices.get(from).addEdge(mapEdge);
 		vertices.get(from).addNeighbors(vertices.get(to));
 		edgeCount++;
@@ -165,12 +166,7 @@ public class MapGraph {
 			}
 		}
 
-		LinkedList<GeographicPoint> path = new LinkedList<>();
-		MapNode node = goalNode;
-		while (node != null) {
-			path.addFirst(node.getLocation());
-			node = parentMap.get(node);
-		}
+		LinkedList<GeographicPoint> path = contructPath(parentMap, goalNode);
 
 		return path;
 	}
@@ -198,14 +194,55 @@ public class MapGraph {
 	 *   start to goal (including both start and goal).
 	 */
 	public List<GeographicPoint> dijkstra(GeographicPoint start, 
-										  GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
-	{
-		// TODO: Implement this method in WEEK 4
+										  GeographicPoint goal, Consumer<GeographicPoint> nodeSearched) {
+		MapNode startNode = vertices.get(start);
+		MapNode goalNode = vertices.get(goal);
 
-		// Hook for visualization.  See writeup.
-		//nodeSearched.accept(next.getLocation());
-		
-		return null;
+		if (startNode == null) {
+			System.err.println("Start node " + start + "does not exist");
+			return null;
+		}
+
+		if (goalNode == null) {
+			System.err.println("Goal node " + goal + " does not exist");
+			return null;
+		}
+
+		PriorityQueue<MapNode> queue = new PriorityQueue<>();
+		Set<MapNode> visited = new HashSet<>();
+		HashMap<MapNode, MapNode> parentMap = new HashMap<>();
+
+		for (MapNode node : vertices.values())
+			node.setDistance(Double.POSITIVE_INFINITY);
+
+		startNode.setDistance(0);
+		queue.add(startNode);
+
+		while (!queue.isEmpty()) {
+			MapNode current = queue.poll();
+			nodeSearched.accept(current.getLocation());
+
+			if (current.equals(goalNode))
+				break;
+
+			if (!visited.contains(current)) {
+				visited.add(current);
+				for (MapNode neighbor : current.getNeighbors()) {
+					if (!visited.contains(neighbor)) {
+						double distance = mapEdge.getEdgeLength() + current.getDistance();
+						if (distance < neighbor.getDistance()) {
+							neighbor.setDistance(distance);
+							parentMap.put(neighbor, current);
+							queue.add(neighbor);
+						}
+					}
+				}
+			}
+		}
+
+		LinkedList<GeographicPoint> path = contructPath(parentMap, goalNode);
+
+		return path;
 	}
 
 	/** Find the path from start to goal using A-Star search
@@ -230,17 +267,75 @@ public class MapGraph {
 	 *   start to goal (including both start and goal).
 	 */
 	public List<GeographicPoint> aStarSearch(GeographicPoint start, 
-											 GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
-	{
-		// TODO: Implement this method in WEEK 4
+											 GeographicPoint goal, Consumer<GeographicPoint> nodeSearched) {
+		MapNode startNode = vertices.get(start);
+		MapNode goalNode = vertices.get(goal);
+
+		if (startNode == null) {
+			System.err.println("Start node " + start + "does not exist");
+			return null;
+		}
+
+		if (goalNode == null) {
+			System.err.println("Goal node " + goal + " does not exist");
+			return null;
+		}
+
+		PriorityQueue<MapNode> queue = new PriorityQueue<>();
+		Set<MapNode> visited = new HashSet<>();
+		HashMap<MapNode, MapNode> parentMap = new HashMap<>();
+
+		for (MapNode node : vertices.values()) {
+			node.setDistance(Double.POSITIVE_INFINITY);
+			node.setActualDistance(Double.POSITIVE_INFINITY);
+		}
+
+		startNode.setDistance(0);
+		startNode.setActualDistance(0);
+		queue.add(startNode);
+
+		while (!queue.isEmpty()) {
+			MapNode current = queue.poll();
+			nodeSearched.accept(current.getLocation());
+
+			if (current.equals(goalNode))
+				break;
+
+			if (!visited.contains(current)) {
+				visited.add(current);
+
+				for (MapNode neighbor : current.getNeighbors()) {
+					if (!visited.contains(neighbor)) {
+						double distance = mapEdge.getEdgeLength() + current.getActualDistance();
+						double preDist = distance + neighbor.getLocation().distance(goalNode.getLocation());
+						if (preDist < neighbor.getDistance()) {
+							neighbor.setDistance(preDist);
+							neighbor.setActualDistance(distance);
+							queue.add(neighbor);
+							parentMap.put(neighbor, current);
+						}
+					}
+				}
+			}
+
+		}
+
+		LinkedList<GeographicPoint> path = contructPath(parentMap, goalNode);
 		
-		// Hook for visualization.  See writeup.
-		//nodeSearched.accept(next.getLocation());
-		
-		return null;
+		return path;
 	}
 
-	
+	private LinkedList<GeographicPoint> contructPath(HashMap<MapNode, MapNode> parentMap, MapNode goal) {
+		LinkedList<GeographicPoint> path = new LinkedList<>();
+
+		MapNode node = goal;
+		while (node != null) {
+			path.addFirst(node.getLocation());
+			node = parentMap.get(node);
+		}
+
+		return path;
+	}
 	
 	public static void main(String[] args)
 	{
